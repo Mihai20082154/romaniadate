@@ -5,7 +5,7 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { Loader2, ArrowRight, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ROMANIAN_CITIES } from "@/lib/utils";
-import type { RegisterRequest } from "@workspace/api-client-react/src/generated/api.schemas";
+import type { RegisterRequest } from "@workspace/api-client-react";
 
 export default function Register() {
   const [step, setStep] = useState(1);

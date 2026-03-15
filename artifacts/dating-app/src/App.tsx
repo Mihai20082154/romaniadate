@@ -1,4 +1,4 @@
-import { Switch, Route, Router as WouterRouter, Redirect } from "wouter";
+import { Switch, Route, Router as WouterRouter, Redirect, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -27,14 +27,21 @@ const queryClient = new QueryClient({
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const { user, isLoading } = useAuth();
-  
-  if (isLoading) return <div className="h-screen w-full flex items-center justify-center bg-background"><div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div></div>;
+
+  if (isLoading) {
+    return (
+      <div className="h-screen w-full flex items-center justify-center bg-background">
+        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   if (!user) return <Redirect to="/login" />;
-  
+
   return <Component />;
 }
 
-function Router() {
+function AppRoutes() {
   const { user } = useAuth();
 
   return (
@@ -45,15 +52,27 @@ function Router() {
         </Route>
         <Route path="/login" component={Login} />
         <Route path="/register" component={Register} />
-        
-        <Route path="/swipe" render={() => <ProtectedRoute component={Swipe} />} />
-        <Route path="/matches" render={() => <ProtectedRoute component={Matches} />} />
-        <Route path="/chat/:matchId" render={() => <ProtectedRoute component={Chat} />} />
-        <Route path="/dashboard" render={() => <ProtectedRoute component={Dashboard} />} />
-        <Route path="/profile" render={() => <ProtectedRoute component={Profile} />} />
-        <Route path="/settings" render={() => <ProtectedRoute component={Settings} />} />
-        <Route path="/vip" render={() => <ProtectedRoute component={VIP} />} />
-        
+        <Route path="/swipe">
+          <ProtectedRoute component={Swipe} />
+        </Route>
+        <Route path="/matches">
+          <ProtectedRoute component={Matches} />
+        </Route>
+        <Route path="/chat/:matchId">
+          <ProtectedRoute component={Chat} />
+        </Route>
+        <Route path="/dashboard">
+          <ProtectedRoute component={Dashboard} />
+        </Route>
+        <Route path="/profile">
+          <ProtectedRoute component={Profile} />
+        </Route>
+        <Route path="/settings">
+          <ProtectedRoute component={Settings} />
+        </Route>
+        <Route path="/vip">
+          <ProtectedRoute component={VIP} />
+        </Route>
         <Route component={NotFound} />
       </Switch>
     </Layout>
@@ -66,7 +85,7 @@ function App() {
       <AuthProvider>
         <TooltipProvider>
           <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-            <Router />
+            <AppRoutes />
           </WouterRouter>
           <Toaster />
         </TooltipProvider>

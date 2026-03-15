@@ -16,7 +16,7 @@ export default function Chat() {
   const match = matches?.find(m => m.id === mId);
   const otherUser = match?.user;
 
-  const { data: initialMessages, refetch } = useGetMessages(mId, { query: { enabled: !!mId } });
+  const { data: initialMessages, refetch } = useGetMessages(mId, undefined, { query: { enabled: !!mId } });
   const sendMessageMutation = useSendMessage();
   const [messages, setMessages] = useState<any[]>([]);
   const [input, setInput] = useState("");
@@ -33,7 +33,7 @@ export default function Chat() {
 
   useEffect(() => {
     const unsubscribe = subscribe((msg) => {
-      if (msg.type === 'chat_message' && msg.data.matchId === mId) {
+      if (msg.type === 'new_message' && (msg.data as any).matchId === mId) {
         setMessages(prev => {
           if (prev.find(p => p.id === msg.data.id)) return prev;
           return [...prev, msg.data];

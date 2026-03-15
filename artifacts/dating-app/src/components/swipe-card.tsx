@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, useMotionValue, useTransform, useAnimation, PanInfo } from "framer-motion";
 import { MapPin, ShieldCheck, Info } from "lucide-react";
-import type { PublicUser } from "@workspace/api-client-react/src/generated/api.schemas";
+import type { PublicUser } from "@workspace/api-client-react";
 
 interface SwipeCardProps {
   user: PublicUser;

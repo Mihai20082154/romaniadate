@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
 import { Link } from "wouter";
-import type { PublicUser } from "@workspace/api-client-react/src/generated/api.schemas";
+import type { PublicUser } from "@workspace/api-client-react";
 
 interface MatchOverlayProps {
   matchUser: PublicUser | null;

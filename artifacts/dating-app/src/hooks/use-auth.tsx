@@ -1,6 +1,6 @@
 import { createContext, useContext, ReactNode, useEffect, useState } from "react";
 import { useGetMe, getGetMeQueryKey } from "@workspace/api-client-react";
-import type { User, LoginRequest, RegisterRequest } from "@workspace/api-client-react/src/generated/api.schemas";
+import type { User, LoginRequest, RegisterRequest } from "@workspace/api-client-react";
 import { login as apiLogin, register as apiRegister } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -16,49 +16,48 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [token, setToken] = useState<string | null>(localStorage.getItem('dating_token'));
+  const [token, setToken] = useState<string | null>(localStorage.getItem("dating_token"));
   const queryClient = useQueryClient();
 
-  const { data: user, isLoading, isError, error } = useGetMe({
+  const { data: user, isLoading, isError } = useGetMe({
     query: {
       enabled: !!token,
       retry: false,
     },
-    request: {
-      headers: token ? { Authorization: `Bearer ${token}` } : undefined
-    }
   });
 
   useEffect(() => {
     if (isError) {
-      // Clear invalid token
-      logout();
+      localStorage.removeItem("dating_token");
+      setToken(null);
+      queryClient.setQueryData(getGetMeQueryKey(), null);
+      queryClient.clear();
     }
   }, [isError]);
 
   const login = async (data: LoginRequest) => {
     const res = await apiLogin(data);
-    localStorage.setItem('dating_token', res.token);
+    localStorage.setItem("dating_token", res.token);
     setToken(res.token);
     queryClient.setQueryData(getGetMeQueryKey(), res.user);
   };
 
   const register = async (data: RegisterRequest) => {
     const res = await apiRegister(data);
-    localStorage.setItem('dating_token', res.token);
+    localStorage.setItem("dating_token", res.token);
     setToken(res.token);
     queryClient.setQueryData(getGetMeQueryKey(), res.user);
   };
 
   const logout = () => {
-    localStorage.removeItem('dating_token');
+    localStorage.removeItem("dating_token");
     setToken(null);
     queryClient.setQueryData(getGetMeQueryKey(), null);
     queryClient.clear();
   };
 
   return (
-    <AuthContext.Provider value={{ user: user || null, isLoading, login, register, logout, token }}>
+    <AuthContext.Provider value={{ user: user ?? null, isLoading: !!token && isLoading, login, register, logout, token }}>
       {children}
     </AuthContext.Provider>
   );

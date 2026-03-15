@@ -4,9 +4,9 @@ import { SwipeCard } from "@/components/swipe-card";
 import { MatchOverlay } from "@/components/match-overlay";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { X, Heart, Star, Undo2, Zap, Loader2 } from "lucide-react";
+import { X, Heart, Star, Undo2, Zap, Loader2, Flame } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import type { PublicUser } from "@workspace/api-client-react/src/generated/api.schemas";
+import type { PublicUser } from "@workspace/api-client-react";
 
 export default function Swipe() {
   const { user } = useAuth();

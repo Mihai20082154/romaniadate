@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 export function Layout({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [location] = useLocation();
-  const { data: diamonds } = useGetDiamondBalance();
+  const { data: diamonds } = useGetDiamondBalance({ query: { enabled: !!user } });
 
   if (!user) return <>{children}</>;
 

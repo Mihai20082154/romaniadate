@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "./use-auth";
-import type { Message } from "@workspace/api-client-react/src/generated/api.schemas";
+import type { Message } from "@workspace/api-client-react";
 
 type WSMessage = 
   | { type: 'chat_message', data: Message }
+  | { type: 'new_message', data: Message }
   | { type: 'typing', data: { matchId: number, userId: number } }
   | { type: 'match_update', data: any };
 

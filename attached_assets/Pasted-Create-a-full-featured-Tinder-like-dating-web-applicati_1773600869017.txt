@@ -1,0 +1,119 @@
+Create a full-featured, Tinder-like dating web application specifically for Romania, with modern premium design, full stack functionality, and all advanced features.
+
+**Tech stack:**
+
+* Frontend: React + Tailwind CSS + Framer Motion
+* Backend: Node.js + Express
+* Database: MongoDB (or Firebase as alternative)
+* Authentication: JWT
+* Real-time chat: Socket.io
+* Image upload: Cloudinary or Firebase storage
+
+**Main requirements:**
+
+1. **User registration & profile**
+
+* Minimum age: 14 years.
+* Separate users into two categories: 14–17 years (teen) and 18+ (adult). Users interact only within their age category.
+* Users must select their city from a complete list of Romanian cities.
+* Users select gender (boy/girl) and preference (looking for boy/girl). Only show profiles matching preference.
+* Profile fields: photos, name, age, bio, gender, interests, location, age group.
+* Optional profile verification (selfie + AI or ID) → Verified badge.
+
+2. **Swipe & match system**
+
+* Swipe left = dislike, swipe right = like (cost 10 diamonds), swipe up = superlike.
+* Rewind previous profile (cost 30 diamonds).
+* Limit likes/superlikes per day depending on account type.
+* Match occurs when two users like each other.
+* Show match animation, match notifications, and match list.
+* Only show profiles within same age category, city filter (optional), and gender preference.
+
+3. **Chat system**
+
+* Real-time chat for matched users.
+* Seen/delivered indicators, typing status.
+* Emojis and image support.
+* Notifications for new messages.
+
+4. **Diamonds & in-app economy**
+
+* Introduce in-app currency “diamonds”.
+* Starting diamonds: 100.
+* Costs: like = 10 diamonds, rewind = 30 diamonds.
+* Dashboard displays current diamond balance.
+* Earn diamonds via referrals, daily login, special events, VIP rewards.
+
+5. **Referral system**
+
+* Unique referral link per user.
+* Every 10 invited users → earn 500 diamonds.
+* Track referrals in the database.
+* Display referral link and number of invited users on dashboard.
+
+6. **Boost & premium features**
+
+* Boost profile to increase visibility for a limited time (paid with diamonds or premium reward).
+* VIP subscription:
+
+  * Unlimited likes/rewinds
+  * See who liked you
+  * Advanced filters
+  * No ads
+* Superlike limit per day
+* Gamification: user level/rank based on activity, top active users leaderboard.
+
+7. **Filters & search**
+
+* Filter by age, city, gender, interests, online status.
+* Save custom filters.
+* Only show profiles matching selected filters and age category.
+
+8. **Notifications & events**
+
+* Push/in-app notifications: new match, new message, referral bonus, diamonds earned.
+* Daily login rewards (diamonds)
+* Special events (bonus diamonds, superlikes)
+
+9. **Safety & moderation**
+
+* Report/block user.
+* Private account option.
+* Admin/moderation system to handle reports.
+
+10. **Analytics & statistics**
+
+* Track swipe history, matches, likes received, chat activity.
+* Show user weekly/monthly activity graphs.
+
+11. **UI & design**
+
+* Dark mode default
+* Glassmorphism cards
+* Gradient buttons
+* Rounded cards with smooth swipe & match animations
+* Mobile-first responsive design
+* Smooth page transitions, loading skeletons, and diamond spend animation
+
+12. **Backend & database structure**
+
+* Store users, matches, messages, diamonds, referrals, age category, cities, gender, preferences.
+* Protected routes for age category and user verification.
+* Validation to prevent cheating diamonds or bypassing rules.
+
+13. **Pages required**
+
+* Home / Swipe page
+* Login & Register
+* Profile edit
+* Matches
+* Chat
+* Dashboard (diamonds + referral + stats)
+* Settings (city, gender, preference, notifications)
+* VIP / Premium info
+
+**Extra instructions**
+
+* Make it fully functional, production-ready, mobile-first, and visually appealing.
+* All features must work logically and securely with backend and database.
+* Ensure smooth, modern UI/UX like a professional dating app.

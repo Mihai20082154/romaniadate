@@ -1,22 +1,39 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: RomaniaDate Dating App API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication
+  - name: users
+    description: User profiles
+  - name: swipe
+    description: Swipe and match
+  - name: matches
+    description: Matches
+  - name: chat
+    description: Chat messages
+  - name: diamonds
+    description: Diamond economy
+  - name: referral
+    description: Referral system
+  - name: notifications
+    description: Notifications
+  - name: admin
+    description: Admin/moderation
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +41,614 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "201":
+          description: Registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users/profile:
+    put:
+      operationId: updateProfile
+      tags: [users]
+      summary: Update user profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProfileRequest"
+      responses:
+        "200":
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /users/discover:
+    get:
+      operationId: discoverUsers
+      tags: [users]
+      summary: Get users to discover (for swiping)
+      parameters:
+        - name: city
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: minAge
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: maxAge
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: onlineOnly
+          in: query
+          schema:
+            type: ["boolean", "null"]
+      responses:
+        "200":
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PublicUser"
+
+  /users/{userId}:
+    get:
+      operationId: getUserById
+      tags: [users]
+      summary: Get a user by ID
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicUser"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users/{userId}/report:
+    post:
+      operationId: reportUser
+      tags: [users]
+      summary: Report a user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReportRequest"
+      responses:
+        "200":
+          description: Reported
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /users/{userId}/block:
+    post:
+      operationId: blockUser
+      tags: [users]
+      summary: Block a user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Blocked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /users/who-liked-me:
+    get:
+      operationId: getWhoLikedMe
+      tags: [users]
+      summary: Get users who liked me (VIP only)
+      responses:
+        "200":
+          description: Users who liked me
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PublicUser"
+        "403":
+          description: VIP required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users/leaderboard:
+    get:
+      operationId: getLeaderboard
+      tags: [users]
+      summary: Get top active users leaderboard
+      responses:
+        "200":
+          description: Leaderboard
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LeaderboardEntry"
+
+  /swipe/like:
+    post:
+      operationId: likeUser
+      tags: [swipe]
+      summary: Like a user (costs 10 diamonds)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SwipeRequest"
+      responses:
+        "200":
+          description: Liked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SwipeResponse"
+        "402":
+          description: Not enough diamonds
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /swipe/dislike:
+    post:
+      operationId: dislikeUser
+      tags: [swipe]
+      summary: Dislike a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SwipeRequest"
+      responses:
+        "200":
+          description: Disliked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SwipeResponse"
+
+  /swipe/superlike:
+    post:
+      operationId: superlikeUser
+      tags: [swipe]
+      summary: Superlike a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SwipeRequest"
+      responses:
+        "200":
+          description: Superliked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SwipeResponse"
+        "429":
+          description: Daily limit reached
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /swipe/rewind:
+    post:
+      operationId: rewindSwipe
+      tags: [swipe]
+      summary: Rewind previous swipe (costs 30 diamonds)
+      responses:
+        "200":
+          description: Rewound
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SwipeResponse"
+        "402":
+          description: Not enough diamonds
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /swipe/boost:
+    post:
+      operationId: boostProfile
+      tags: [swipe]
+      summary: Boost profile visibility
+      responses:
+        "200":
+          description: Profile boosted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BoostResponse"
+
+  /matches:
+    get:
+      operationId: getMatches
+      tags: [matches]
+      summary: Get all matches for current user
+      responses:
+        "200":
+          description: Matches list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Match"
+
+  /matches/{matchId}:
+    delete:
+      operationId: unmatch
+      tags: [matches]
+      summary: Unmatch
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Unmatched
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /chat/{matchId}/messages:
+    get:
+      operationId: getMessages
+      tags: [chat]
+      summary: Get messages for a match
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: before
+          in: query
+          schema:
+            type: ["string", "null"]
+      responses:
+        "200":
+          description: Messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Message"
+
+    post:
+      operationId: sendMessage
+      tags: [chat]
+      summary: Send a message
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendMessageRequest"
+      responses:
+        "201":
+          description: Message sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+
+  /diamonds/balance:
+    get:
+      operationId: getDiamondBalance
+      tags: [diamonds]
+      summary: Get current diamond balance
+      responses:
+        "200":
+          description: Diamond balance
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiamondBalance"
+
+  /diamonds/daily-login:
+    post:
+      operationId: claimDailyLogin
+      tags: [diamonds]
+      summary: Claim daily login reward
+      responses:
+        "200":
+          description: Diamonds awarded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiamondTransaction"
+        "409":
+          description: Already claimed today
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /diamonds/history:
+    get:
+      operationId: getDiamondHistory
+      tags: [diamonds]
+      summary: Get diamond transaction history
+      responses:
+        "200":
+          description: Transaction history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DiamondTransaction"
+
+  /referral/info:
+    get:
+      operationId: getReferralInfo
+      tags: [referral]
+      summary: Get referral link and stats
+      responses:
+        "200":
+          description: Referral info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReferralInfo"
+
+  /notifications:
+    get:
+      operationId: getNotifications
+      tags: [notifications]
+      summary: Get notifications
+      responses:
+        "200":
+          description: Notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Notification"
+
+  /notifications/{notificationId}/read:
+    post:
+      operationId: markNotificationRead
+      tags: [notifications]
+      summary: Mark notification as read
+      parameters:
+        - name: notificationId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Marked read
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /notifications/read-all:
+    post:
+      operationId: markAllNotificationsRead
+      tags: [notifications]
+      summary: Mark all notifications as read
+      responses:
+        "200":
+          description: All marked read
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /users/settings:
+    put:
+      operationId: updateSettings
+      tags: [users]
+      summary: Update user settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSettingsRequest"
+      responses:
+        "200":
+          description: Settings updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /users/vip:
+    post:
+      operationId: activateVip
+      tags: [users]
+      summary: Activate VIP subscription
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ActivateVipRequest"
+      responses:
+        "200":
+          description: VIP activated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /users/stats:
+    get:
+      operationId: getUserStats
+      tags: [users]
+      summary: Get user activity stats
+      responses:
+        "200":
+          description: User stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserStats"
+
+  /admin/reports:
+    get:
+      operationId: getAdminReports
+      tags: [admin]
+      summary: Get all reports (admin only)
+      responses:
+        "200":
+          description: Reports
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Report"
+
+  /admin/reports/{reportId}/resolve:
+    post:
+      operationId: resolveReport
+      tags: [admin]
+      summary: Resolve a report (admin only)
+      parameters:
+        - name: reportId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResolveReportRequest"
+      responses:
+        "200":
+          description: Resolved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +659,582 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+      required:
+        - success
+
+    RegisterRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+        name:
+          type: string
+        birthDate:
+          type: string
+        gender:
+          type: string
+          enum: [boy, girl]
+        preference:
+          type: string
+          enum: [boy, girl, both]
+        city:
+          type: string
+        referralCode:
+          type: ["string", "null"]
+      required:
+        - email
+        - password
+        - name
+        - birthDate
+        - gender
+        - preference
+        - city
+
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+      required:
+        - email
+        - password
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          $ref: "#/components/schemas/User"
+      required:
+        - token
+        - user
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        name:
+          type: string
+        birthDate:
+          type: string
+        age:
+          type: integer
+        ageCategory:
+          type: string
+          enum: [teen, adult]
+        gender:
+          type: string
+          enum: [boy, girl]
+        preference:
+          type: string
+          enum: [boy, girl, both]
+        city:
+          type: string
+        bio:
+          type: ["string", "null"]
+        photos:
+          type: array
+          items:
+            type: string
+        interests:
+          type: array
+          items:
+            type: string
+        diamonds:
+          type: integer
+        isVip:
+          type: boolean
+        vipExpiresAt:
+          type: ["string", "null"]
+        isVerified:
+          type: boolean
+        isPrivate:
+          type: boolean
+        isBoosted:
+          type: boolean
+        boostExpiresAt:
+          type: ["string", "null"]
+        level:
+          type: integer
+        xp:
+          type: integer
+        rank:
+          type: ["string", "null"]
+        referralCode:
+          type: string
+        isOnline:
+          type: boolean
+        lastSeen:
+          type: ["string", "null"]
+        isAdmin:
+          type: boolean
+        likesGivenToday:
+          type: integer
+        superlikesGivenToday:
+          type: integer
+        notifyNewMatch:
+          type: boolean
+        notifyNewMessage:
+          type: boolean
+        notifyDiamonds:
+          type: boolean
+        createdAt:
+          type: string
+      required:
+        - id
+        - email
+        - name
+        - birthDate
+        - age
+        - ageCategory
+        - gender
+        - preference
+        - city
+        - photos
+        - interests
+        - diamonds
+        - isVip
+        - isVerified
+        - isPrivate
+        - isBoosted
+        - level
+        - xp
+        - referralCode
+        - isOnline
+        - isAdmin
+        - likesGivenToday
+        - superlikesGivenToday
+        - notifyNewMatch
+        - notifyNewMessage
+        - notifyDiamonds
+        - createdAt
+
+    PublicUser:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        age:
+          type: integer
+        ageCategory:
+          type: string
+          enum: [teen, adult]
+        gender:
+          type: string
+          enum: [boy, girl]
+        city:
+          type: string
+        bio:
+          type: ["string", "null"]
+        photos:
+          type: array
+          items:
+            type: string
+        interests:
+          type: array
+          items:
+            type: string
+        isVerified:
+          type: boolean
+        isBoosted:
+          type: boolean
+        isOnline:
+          type: boolean
+        lastSeen:
+          type: ["string", "null"]
+        level:
+          type: integer
+        rank:
+          type: ["string", "null"]
+      required:
+        - id
+        - name
+        - age
+        - ageCategory
+        - gender
+        - city
+        - photos
+        - interests
+        - isVerified
+        - isBoosted
+        - isOnline
+        - level
+
+    UpdateProfileRequest:
+      type: object
+      properties:
+        name:
+          type: ["string", "null"]
+        bio:
+          type: ["string", "null"]
+        photos:
+          type: ["array", "null"]
+          items:
+            type: string
+        interests:
+          type: ["array", "null"]
+          items:
+            type: string
+        city:
+          type: ["string", "null"]
+
+    UpdateSettingsRequest:
+      type: object
+      properties:
+        city:
+          type: ["string", "null"]
+        preference:
+          type: ["string", "null"]
+          enum: [boy, girl, both, null]
+        isPrivate:
+          type: ["boolean", "null"]
+        notifyNewMatch:
+          type: ["boolean", "null"]
+        notifyNewMessage:
+          type: ["boolean", "null"]
+        notifyDiamonds:
+          type: ["boolean", "null"]
+
+    SwipeRequest:
+      type: object
+      properties:
+        targetUserId:
+          type: integer
+      required:
+        - targetUserId
+
+    SwipeResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        isMatch:
+          type: boolean
+        matchId:
+          type: ["integer", "null"]
+        diamondsSpent:
+          type: integer
+        diamondsRemaining:
+          type: integer
+        message:
+          type: ["string", "null"]
+      required:
+        - success
+        - isMatch
+        - diamondsSpent
+        - diamondsRemaining
+
+    BoostResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        boostExpiresAt:
+          type: string
+        diamondsSpent:
+          type: integer
+      required:
+        - success
+        - boostExpiresAt
+        - diamondsSpent
+
+    Match:
+      type: object
+      properties:
+        id:
+          type: integer
+        user:
+          $ref: "#/components/schemas/PublicUser"
+        createdAt:
+          type: string
+        lastMessage:
+          $ref: "#/components/schemas/Message"
+        unreadCount:
+          type: integer
+      required:
+        - id
+        - user
+        - createdAt
+        - unreadCount
+
+    Message:
+      type: object
+      properties:
+        id:
+          type: integer
+        matchId:
+          type: integer
+        senderId:
+          type: integer
+        content:
+          type: string
+        type:
+          type: string
+          enum: [text, image, emoji]
+        isRead:
+          type: boolean
+        isDelivered:
+          type: boolean
+        createdAt:
+          type: string
+      required:
+        - id
+        - matchId
+        - senderId
+        - content
+        - type
+        - isRead
+        - isDelivered
+        - createdAt
+
+    SendMessageRequest:
+      type: object
+      properties:
+        content:
+          type: string
+        type:
+          type: string
+          enum: [text, image, emoji]
+      required:
+        - content
+        - type
+
+    DiamondBalance:
+      type: object
+      properties:
+        balance:
+          type: integer
+        totalEarned:
+          type: integer
+        totalSpent:
+          type: integer
+      required:
+        - balance
+        - totalEarned
+        - totalSpent
+
+    DiamondTransaction:
+      type: object
+      properties:
+        id:
+          type: integer
+        amount:
+          type: integer
+        type:
+          type: string
+          enum: [earn, spend]
+        reason:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - amount
+        - type
+        - reason
+        - createdAt
+
+    ReferralInfo:
+      type: object
+      properties:
+        referralCode:
+          type: string
+        referralLink:
+          type: string
+        referredCount:
+          type: integer
+        totalEarned:
+          type: integer
+        nextMilestone:
+          type: integer
+        progressToNext:
+          type: integer
+      required:
+        - referralCode
+        - referralLink
+        - referredCount
+        - totalEarned
+        - nextMilestone
+        - progressToNext
+
+    Notification:
+      type: object
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum: [match, message, diamond, referral, event, superlike]
+        title:
+          type: string
+        body:
+          type: string
+        isRead:
+          type: boolean
+        relatedId:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+      required:
+        - id
+        - type
+        - title
+        - body
+        - isRead
+        - createdAt
+
+    ReportRequest:
+      type: object
+      properties:
+        reason:
+          type: string
+          enum: [spam, inappropriate, fake, harassment, other]
+        description:
+          type: ["string", "null"]
+      required:
+        - reason
+
+    Report:
+      type: object
+      properties:
+        id:
+          type: integer
+        reporterId:
+          type: integer
+        reportedId:
+          type: integer
+        reason:
+          type: string
+        description:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [pending, resolved, dismissed]
+        createdAt:
+          type: string
+        reporterName:
+          type: string
+        reportedName:
+          type: string
+      required:
+        - id
+        - reporterId
+        - reportedId
+        - reason
+        - status
+        - createdAt
+        - reporterName
+        - reportedName
+
+    ResolveReportRequest:
+      type: object
+      properties:
+        action:
+          type: string
+          enum: [ban, warn, dismiss]
+        notes:
+          type: ["string", "null"]
+      required:
+        - action
+
+    LeaderboardEntry:
+      type: object
+      properties:
+        rank:
+          type: integer
+        userId:
+          type: integer
+        name:
+          type: string
+        photo:
+          type: ["string", "null"]
+        level:
+          type: integer
+        xp:
+          type: integer
+        rankTitle:
+          type: ["string", "null"]
+      required:
+        - rank
+        - userId
+        - name
+        - level
+        - xp
+
+    UserStats:
+      type: object
+      properties:
+        totalSwipes:
+          type: integer
+        totalLikes:
+          type: integer
+        totalMatches:
+          type: integer
+        totalMessages:
+          type: integer
+        likesReceived:
+          type: integer
+        superlikesReceived:
+          type: integer
+        weeklySwipes:
+          type: array
+          items:
+            $ref: "#/components/schemas/DailyCount"
+        weeklyMatches:
+          type: array
+          items:
+            $ref: "#/components/schemas/DailyCount"
+      required:
+        - totalSwipes
+        - totalLikes
+        - totalMatches
+        - totalMessages
+        - likesReceived
+        - superlikesReceived
+        - weeklySwipes
+        - weeklyMatches
+
+    DailyCount:
+      type: object
+      properties:
+        date:
+          type: string
+        count:
+          type: integer
+      required:
+        - date
+        - count
+
+    ActivateVipRequest:
+      type: object
+      properties:
+        plan:
+          type: string
+          enum: [monthly, quarterly, yearly]
+      required:
+        - plan

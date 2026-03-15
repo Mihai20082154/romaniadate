@@ -1,8 +1,8 @@
-# Workspace
+# RomaniaDate - Dating App
 
 ## Overview
 
-pnpm workspace monorepo using TypeScript. Each package manages its own dependencies.
+A full-featured Tinder-like dating web application specifically for Romania. Features swipe/match system, real-time chat, diamonds economy, referral system, VIP/premium features, and age category separation.
 
 ## Stack
 
@@ -10,9 +10,12 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - **Node.js version**: 24
 - **Package manager**: pnpm
 - **TypeScript version**: 5.9
-- **API framework**: Express 5
+- **Frontend**: React + Vite + Tailwind CSS + Framer Motion (artifacts/dating-app)
+- **API framework**: Express 5 (artifacts/api-server)
 - **Database**: PostgreSQL + Drizzle ORM
-- **Validation**: Zod (`zod/v4`), `drizzle-zod`
+- **Authentication**: JWT (jsonwebtoken + bcryptjs)
+- **Real-time**: WebSocket (ws library)
+- **Validation**: Zod (zod/v4), drizzle-zod
 - **API codegen**: Orval (from OpenAPI spec)
 - **Build**: esbuild (CJS bundle)
 
@@ -20,77 +23,82 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 
 ```text
 artifacts-monorepo/
-├── artifacts/              # Deployable applications
-│   └── api-server/         # Express API server
-├── lib/                    # Shared libraries
+├── artifacts/
+│   ├── api-server/         # Express API server + WebSocket
+│   └── dating-app/         # React + Vite frontend (previewPath: /)
+├── lib/
 │   ├── api-spec/           # OpenAPI spec + Orval codegen config
 │   ├── api-client-react/   # Generated React Query hooks
 │   ├── api-zod/            # Generated Zod schemas from OpenAPI
 │   └── db/                 # Drizzle ORM schema + DB connection
-├── scripts/                # Utility scripts (single workspace package)
-│   └── src/                # Individual .ts scripts, run via `pnpm --filter @workspace/scripts run <script>`
-├── pnpm-workspace.yaml     # pnpm workspace (artifacts/*, lib/*, lib/integrations/*, scripts)
-├── tsconfig.base.json      # Shared TS options (composite, bundler resolution, es2022)
-├── tsconfig.json           # Root TS project references
-└── package.json            # Root package with hoisted devDeps
+├── scripts/
+└── ...
 ```
 
-## TypeScript & Composite Projects
+## Database Tables
 
-Every package extends `tsconfig.base.json` which sets `composite: true`. The root `tsconfig.json` lists all packages as project references. This means:
+- `users` - User accounts with all profile data, diamonds, VIP, levels, referral codes
+- `swipes` - Swipe actions (like/dislike/superlike)
+- `matches` - Mutual likes that become matches
+- `messages` - Chat messages between matched users
+- `diamond_transactions` - Earn/spend history for diamond economy
+- `notifications` - In-app notifications
+- `reports` - User reports for moderation
+- `blocks` - User block relationships
 
-- **Always typecheck from the root** — run `pnpm run typecheck` (which runs `tsc --build --emitDeclarationOnly`). This builds the full dependency graph so that cross-package imports resolve correctly. Running `tsc` inside a single package will fail if its dependencies haven't been built yet.
-- **`emitDeclarationOnly`** — we only emit `.d.ts` files during typecheck; actual JS bundling is handled by esbuild/tsx/vite...etc, not `tsc`.
-- **Project references** — when package A depends on package B, A's `tsconfig.json` must list B in its `references` array. `tsc --build` uses this to determine build order and skip up-to-date packages.
+## Key Features
 
-## Root Scripts
+1. **Auth**: JWT-based. Register with age validation (14+ min), age categories (teen 14-17, adult 18+)
+2. **Swipe system**: Like (10 diamonds), Dislike (free), Superlike (limited per day), Rewind (30 diamonds)
+3. **Match system**: Mutual likes create matches with notifications and diamond rewards
+4. **Real-time chat**: WebSocket at /ws with typing indicators and read receipts
+5. **Diamond economy**: Starting 100, earn via referrals/daily login/matches, spend on likes/rewinds/boosts/VIP
+6. **Referral system**: Every 10 referrals = 500 diamonds
+7. **VIP subscription**: Monthly (500 💎), Quarterly (1200 💎), Yearly (3000 💎)
+8. **Leveling system**: XP earned from swipes/matches/messages, ranks from Beginner to Legend
+9. **Safety**: Report/block users, admin moderation panel, private accounts
+10. **Profile boost**: 30-minute visibility boost for 50 diamonds
 
-- `pnpm run build` — runs `typecheck` first, then recursively runs `build` in all packages that define it
-- `pnpm run typecheck` — runs `tsc --build --emitDeclarationOnly` using project references
+## API Routes
 
-## Packages
+All under `/api`:
+- `POST /auth/register` - Register (14+ age, city from Romanian cities list)
+- `POST /auth/login` - Login
+- `GET /auth/me` - Current user
+- `GET /users/discover` - Profiles to swipe (filtered by age category, gender pref, city)
+- `POST /swipe/like|dislike|superlike|rewind|boost` - Swipe actions
+- `GET /matches` - User's matches
+- `GET/POST /chat/:matchId/messages` - Chat
+- `GET /diamonds/balance|history` - Diamond info
+- `POST /diamonds/daily-login` - Claim daily reward
+- `GET /referral/info` - Referral stats
+- `GET /notifications` - Notifications
+- `GET /users/leaderboard|stats|who-liked-me` - Stats & leaderboard
+- `PUT /users/profile|settings` - Profile/settings update
+- `POST /users/vip` - Activate VIP subscription
+- `GET/POST /admin/reports` - Admin moderation
 
-### `artifacts/api-server` (`@workspace/api-server`)
+## WebSocket
 
-Express 5 API server. Routes live in `src/routes/` and use `@workspace/api-zod` for request and response validation and `@workspace/db` for persistence.
+Connect to `/ws?token=<JWT>` for real-time events:
+- `new_message` - New chat message from matched user
+- `typing` - Typing indicator
+- `connected` - Connection confirmed
 
-- Entry: `src/index.ts` — reads `PORT`, starts Express
-- App setup: `src/app.ts` — mounts CORS, JSON/urlencoded parsing, routes at `/api`
-- Routes: `src/routes/index.ts` mounts sub-routers; `src/routes/health.ts` exposes `GET /health` (full path: `/api/health`)
-- Depends on: `@workspace/db`, `@workspace/api-zod`
-- `pnpm --filter @workspace/api-server run dev` — run the dev server
-- `pnpm --filter @workspace/api-server run build` — production esbuild bundle (`dist/index.cjs`)
-- Build bundles an allowlist of deps (express, cors, pg, drizzle-orm, zod, etc.) and externalizes the rest
+## Demo Users
 
-### `lib/db` (`@workspace/db`)
+Pre-seeded demo accounts (password: `demo1234`):
+- `ana@demo.ro` - Girl, București, 27 years, verified
+- `mihai@demo.ro` - Boy, Cluj-Napoca, 30 years
+- `elena@demo.ro` - Girl, Timișoara, 25 years
+- `andrei@demo.ro` - Boy, Iași, 28 years (boosted)
+- `ioana@demo.ro` - Girl, București, 26 years
+- `cristian@demo.ro` - Boy, Constanța, 32 years
+- `maria@demo.ro` - Girl, Brașov, 24 years, verified
 
-Database layer using Drizzle ORM with PostgreSQL. Exports a Drizzle client instance and schema models.
+## Development
 
-- `src/index.ts` — creates a `Pool` + Drizzle instance, exports schema
-- `src/schema/index.ts` — barrel re-export of all models
-- `src/schema/<modelname>.ts` — table definitions with `drizzle-zod` insert schemas (no models definitions exist right now)
-- `drizzle.config.ts` — Drizzle Kit config (requires `DATABASE_URL`, automatically provided by Replit)
-- Exports: `.` (pool, db, schema), `./schema` (schema only)
-
-Production migrations are handled by Replit when publishing. In development, we just use `pnpm --filter @workspace/db run push`, and we fallback to `pnpm --filter @workspace/db run push-force`.
-
-### `lib/api-spec` (`@workspace/api-spec`)
-
-Owns the OpenAPI 3.1 spec (`openapi.yaml`) and the Orval config (`orval.config.ts`). Running codegen produces output into two sibling packages:
-
-1. `lib/api-client-react/src/generated/` — React Query hooks + fetch client
-2. `lib/api-zod/src/generated/` — Zod schemas
-
-Run codegen: `pnpm --filter @workspace/api-spec run codegen`
-
-### `lib/api-zod` (`@workspace/api-zod`)
-
-Generated Zod schemas from the OpenAPI spec (e.g. `HealthCheckResponse`). Used by `api-server` for response validation.
-
-### `lib/api-client-react` (`@workspace/api-client-react`)
-
-Generated React Query hooks and fetch client from the OpenAPI spec (e.g. `useHealthCheck`, `healthCheck`).
-
-### `scripts` (`@workspace/scripts`)
-
-Utility scripts package. Each script is a `.ts` file in `src/` with a corresponding npm script in `package.json`. Run scripts via `pnpm --filter @workspace/scripts run <script>`. Scripts can import any workspace package (e.g., `@workspace/db`) by adding it as a dependency in `scripts/package.json`.
+- `pnpm --filter @workspace/api-server run dev` - Start API server
+- `pnpm --filter @workspace/dating-app run dev` - Start frontend
+- `pnpm --filter @workspace/db run push` - Push schema changes
+- `pnpm --filter @workspace/api-spec run codegen` - Regenerate API client

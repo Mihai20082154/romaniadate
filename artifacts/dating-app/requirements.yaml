@@ -1,0 +1,27 @@
+packages:
+  "framer-motion": "For advanced swipe card animations and page transitions"
+  "recharts": "For the user activity and stats dashboard"
+  "date-fns": "For formatting chat timestamps and relative times"
+  "canvas-confetti": "For match celebration particle effects"
+  "@types/canvas-confetti": "Types for canvas-confetti"
+  "clsx": "For conditional tailwind class merging"
+  "tailwind-merge": "For merging tailwind classes safely"
+
+images:
+  - path: "artifacts/dating-app/public/images/logo.png"
+    description: "A premium, minimalist neon-glowing flame logo mixed with a heart shape for a dating app, isolated on transparent background"
+    aspect_ratio: "1:1"
+  - path: "artifacts/dating-app/public/images/hero-bg.png"
+    description: "Deep dark abstract background with vibrant magenta and cyan light leaks, glassmorphism aesthetic, suitable for dating app landing page"
+    aspect_ratio: "16:9"
+  - path: "artifacts/dating-app/public/images/vip-bg.png"
+    description: "Luxury dark background with subtle gold and diamond geometric patterns, glowing premium aesthetic"
+    aspect_ratio: "16:9"
+  - path: "artifacts/dating-app/public/images/empty-matches.png"
+    description: "A beautifully illustrated broken heart or solitary floating envelope icon, neon outlines on dark background, expressing emptiness"
+    aspect_ratio: "1:1"
+
+notes:
+  - WebSocket connects to ws://<host>/ws with token for real-time chat
+  - All endpoints under /api require standard Bearer token authorization
+  - Uses @workspace/api-client-react for TanStack hooks
